@@ -1,0 +1,527 @@
+---
+title: "Projet sur le Logiciel R & Studio"
+author: 'COMPAORE Mohamadi Bassirou   &    Samson Awouto     &    Diop Yague '
+date: "`r Sys.Date()`"
+output:
+  word_document:
+    toc: true
+    toc_depth: '3'
+  pdf_document:
+    toc: true
+    toc_depth: '3'
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    number_sections: true
+    code_folding: show
+    keep_md: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Résolution des équations non linéaires avec le logiciel R
+### RStudio est un environnement de développement gratuit, libre et multiplateforme pour R, un langage de programmation utilisé pour le traitement de données et l’analyse statistique.Dans notre contexte,nous allons utiliser RStudio poour la résolution des équations non linéaire.Les équations non linéaires sont des équations dont le degré est supérieure à 1
+
+## Installation et Importation des Packages
+
+```{r package, warning=FALSE}
+# Installer et charger le  lpSolve
+#install.packages
+#install.packages("rootSolve")
+#install.packages("nleqslv")
+library(lpSolve)
+library(haven)
+library(nleqslv)
+library(rootSolve)
+library(magrittr)
+library(dplyr)
+library(tidyr)
+library(rootSolve)
+library(nleqslv)
+library(pracma)
+library(stats)
+library(reshape)
+library(ggplot2)
+library(deSolve)
+```
+# Présentation des differents packages
+
+### Dans cette partie, nous mettons en exergue les packages nécessaires à la resolution des équations non linéaires.L'Objectif finale est de pouvoir optimiser nos differentes données en fonction du besoin. Nous pouvons par exemples optimiser les couts de production d'une entreprise,les dépenses publiques de l'Etat,les profits d'une entreprise etc...
+
+## Utilisation du Package "rootSolve"
+
+```{r warning=FALSE}
+
+# Chargement du package
+
+# Définition du système d'équations
+equations <- function(x) {
+  # Définition des équations du système
+  equation_1 <- 3*x[1]^2 + x[2]^2 - 1    
+  equation_2 <- 5*x[1]^2 - 2*x[2]^2 + 4
+                              
+  # Retourner les équations sous forme de vecteur
+  return(c(equation_1, equation_2))
+}
+
+# Vecteur initial de valeurs approchées pour les variables
+point_de_départ <- c(1, 1)
+
+# Résolution du système d'équations non linéaires
+solution <- multiroot(f = equations, start = point_de_départ)
+
+# Affichage des solutions
+print(solution$root)
+
+# AUTRES ARGUMENTS
+           #tolerance =  : pour définir une tolérance plus stricte pour la convergence.
+            #maxiter: pour spécifier le nombre maximal d'itérations autorisées
+
+```
+
+## Utilisation du Package "nleqslv"
+
+```{r warning=FALSE}
+
+# Chargement du package nleqslv
+
+# Définition de la fonction du système d'équations
+systeme_equations <- function(x) {
+  eq1 <- 3*x[1]^2 + x[2]^2 - 1
+  eq2 <- 5*x[1]^2 - 2*x[2]^2 + 4
+  return(c(eq1, eq2))
+}
+
+# Résolution du système d'équations avec la méthode de Newton
+solution <- nleqslv(c(1, 1), 
+                    systeme_equations, 
+                    method = "Newton")
+
+# Affichage des solutions
+print(solution$x)
+
+
+# afficher l'intervalle de validité de la solution
+
+print(solution$fvec) 
+
+## afficher le nombre d'ittération
+print(solution$iter)
+
+```
+## Utilisation du Package "pracma"
+
+```{r warning=FALSE}
+
+# Définition du système d'équations
+equations <- function(x) {
+  pracma_1 <- x[1]^2 + x[2]^2 +200
+  pracma_2 <- x[1]^2 - x[2]^2 -1000
+  return(c(pracma_1, pracma_2))
+}
+
+# Spécification des valeurs initiales pour les variables
+initial_guess <- c(1, 1)
+
+# Résolution du système d'équations non linéaires
+solution <- fsolve(equations, initial_guess)
+
+# Affichage des solutions
+print(solution)
+```
+
+
+## Utilisation du Package "stats"
+
+```{r warning=FALSE}
+
+# Définition de la fonction d'utilité et de la contrainte budgétaire
+utilite <- function(x) {
+  utilité <- - (x[1]^2 + x[2]^2)
+  return(utilité)
+}
+
+contrainte_budg <- function(x) {
+  revenu_total <- -1000 +x[1] + x[2] 
+  return(revenu_total)
+}
+
+# Fonction objectif (utilité sous contrainte)
+fonction_objectif <- function(x_lambda) {
+  x <- x_lambda[1:2]
+  lambda <- x_lambda[3]
+  return((utilite(x) - lambda * contrainte_budg(x)))
+}
+
+# Variables initiales
+x0 <- c(0, 0)  # Valeurs initiales pour x1 et x2
+lambda0 <- 1        # Valeur initiale de lambda
+
+# Résolution du problème d'optimisation
+resultat <- optim(c(x0, lambda0), fonction_objectif, method = "BFGS")
+
+# Affichage des résultats
+x_opt <- resultat$par[1:2]
+lambda_opt <- resultat$par[3]
+revenu_max <- -resultat$value
+
+cat("Les quantités optimales sont :", x_opt, "\n")
+cat("Le revenu maximal est :", revenu_max, "\n")
+cat("La valeur optimale de lambda est :", lambda_opt, "\n")
+```
+
+
+## Utilisation de la Fonction optim
+### Certaines fonctions de R Permettent egaalement de resoudre les équations non linéaires. Dans cette SEction,nous utiliserons la fonction Optim pour resoudre le système d'équation non linéaire 
+
+```{r warning=FALSE}
+# Définition de la fonction f à deux inconnus
+f <- function(xy) {
+  x <- xy[1]
+  y <- xy[2]
+  return((x - 2)^2 + (y + 3)^2)
+  
+}
+
+# Initialisation d'une valeur de départ pour l'optimisation
+xy_start <- c(0, 0)
+
+# Utilisation de la fonction optim pour trouver le minimum de la fonction f
+result <- optim(xy_start, f)
+
+# Affichage du résultat
+print(result)
+
+```
+
+## Résolution avec les matrices 
+
+```{r warning=FALSE}
+# Définir la matrice des coefficients
+A <- matrix(c(3, 2, 4, -1), nrow = 2, byrow = TRUE)
+# Définir le vecteur
+B <- c(11, 3)
+# Résoudre le système
+X <- solve(A, B)
+print(X)
+## [1] 1.545455 3.181818
+# Calculer AX
+AX <- A %*% X
+# Vérifier si AX est égal à B
+identical(AX, B)
+## [1] FALSE
+
+```
+
+## Résolution graphique
+### La resolution graphique permet de mieux visualiser nos Resultats et de faire une comparaison avec la methode algebrique
+#### Exeemple 1
+```{r}
+
+# Définir les fonctions d'équations
+equation1 <- function(x) {
+  return(x^2)
+}
+
+equation2 <- function(x) {
+  return(sin(x))
+}
+
+# Générer des valeurs de x pour le traçage
+x <- seq(-2*pi, 2*pi, by = 0.1)
+
+# Traçage des courbes
+plot(x, equation1(x), type = "l", col = "blue", xlab = "x", ylab = "y", main = "Résolution graphique d'un système d'équations non linéaires")
+lines(x, equation2(x), col = "red")
+
+# Ajouter une légende
+legend("topright", legend = c("y = x^2", "y = sin(x)"), col = c("blue", "red"), lty = 1)
+
+# Trouver les points d'intersection
+intersection_points <- data.frame(x = NULL, y = NULL)
+for(i in 1:length(x)) {
+  if(abs(equation1(x[i]) - equation2(x[i])) < 0.1) {
+    intersection_points <- rbind(intersection_points, data.frame(x = x[i], y = equation1(x[i])))
+  }
+}
+
+# Afficher les points d'intersection avec les valeurs des solutions (facultatives)
+points(intersection_points$x, intersection_points$y, col = "green", pch = 16)
+text(intersection_points$x, intersection_points$y, labels = paste("(", round(intersection_points$x, 2), ",", round(intersection_points$y, 2), ")"), pos = 3)
+
+# Afficher les valeurs des solutions
+print(intersection_points)
+
+```
+#### Exeemple 2
+
+```{r warning=FALSE}
+
+# Définir les fonctions d'équations
+equation1 <- function(x) {
+  return(x^2)
+}
+
+equation2 <- function(x) {
+  return(sin(x))
+}
+
+# Générer des valeurs de x pour le traçage
+x <- seq(-2*pi, 2*pi, by = 0.1)
+
+# Assuming x, equation1, and equation2 are defined
+
+library(ggplot2)
+
+# Create the ggplot2 object
+
+ggplot(data = data.frame(x = x), aes(x = x)) +
+
+  # Add the first curve (blue) with label
+  geom_line(y = equation1(x), col = "blue", linetype = "solid", label = "Equation 1") +
+
+  # Add the second curve (red) with label
+  geom_line(y = equation2(x), col = "red", linetype = "dashed", label = "Equation 2") +
+
+  # Add intersection points (assuming intersection_points is a data frame)
+  geom_point(data = intersection_points, aes(x = intersection_points$x, y = intersection_points$y), 
+             col = "blue", pch = 16, size = 3) +  # Adjust size as needed
+
+  # Customize plot elements
+  labs(x = "x", y = "y") +
+  ggtitle("Résolution graphique d'un système d'équations non linéaires") +
+
+  # Add the legend with updated syntax
+  scale_linetype_discrete(name = "Légende") +
+  guides(linetype = guide_legend(title.position = "top"))  # Legend positioning
+```
+
+# Equations Linéaires Ordinaire classique: Modèle de Lorenz
+
+### Une équation différentielle est une équation entre une ou plusieurs fonctions inconnues et leurs dérivées. Elle décrit comment une fonction varie par rapport à une ou plusieurs variables (souvent le temps et/ou l’espace) et par rapport à ses dérivées. Il y a différentes facon de classifier les équations différentielles.les équations peuvent être stochastique (la quantité inconnue est aléatoire) ou déterministe (la quantité inconnue est déterministe).Elles peuvent porter sur des fonctions à une seule variable (équation différentielle ordinaire) ou à plusieurs variables (équation aux dérivées partielles).les équations peuvent inclure des fonctions dont la dérivée à un certain pas de temps dépend de la dérivée à un pas de temps précédent (équation différentielle à retard ou differential equations delay). Elles peuvent aussi inclure des relations algébriques entre les variables (équation différentielle algébrique).Il existe plusieurs packages R permettant de résoudre ces équations et d’ajuster ces modèles à de la donnée. Ici, seuls les package deSolve et diffeqr sont utilisés pour résoudre des ED. On cherche à résoudre y′=ay. Avec condition initiale y(0)=y0. On commence par coder l’équation différentielle: - t représente le temps courant - Y représente l’état courant du système - parameters stocke les paramètres du modèle.
+
+```{r warning=FALSE}
+
+model <- function(t, Y, parameters) {
+  with(as.list(parameters), {
+    dy = -a * Y
+    list(dy)
+  })
+}
+
+# On renseigne ensuite la jacobienne ∂y′∂y
+
+jac <- function(t, Y, parameters) {
+  with(as.list(parameters), {
+    PD[1, 1] <- a
+    return(PD)
+  })
+}
+
+# On peut ensuite résoudre l’EDO pour a=1 et y0=1 sur l’intervalle [0,1] des pas de temps de longeur 0.01
+
+#comme suit:
+params <- c(a = 1)
+y0     <- c(1)
+times  <- seq(0, 1, by = 0.01)
+PD     <- matrix(0, nrow = 1, ncol = 1)
+out_atome <- ode(y0, times, model, parms = params, jacfun = jac)
+
+# Le résultat est une matrice: - une colonne pour le temps (reprend les valeurs de times) - une colonne par dimension dans le système d’équationsdifférentielles
+
+#/*On peut vérifier que la solution numérique (en bleu) est confondue avec la solution analytique (en rouge)./*
+
+plot_data <- data.frame(out_atome) %>%
+  mutate(analytic = exp(-time)) %>%
+  pivot_longer(cols = -time,
+               names_to = "type",
+               values_to = "value")
+ggplot(plot_data, aes(x = time, y = value, color = type)) +
+  geom_line() +
+  ylim(0, 1) +
+  theme(legend.position = c(0.95, 0.95),
+        legend.justification = c(1, 1),
+        legend.background = element_rect(fill = NA))
+
+
+    diagnostics(out_atome)
+```
+
+## Exercice 1
+### Résoudre d'un programme simplex: Production de papier. L'énoncer de cet Exercice se trouve dans le fichier Word.L’objectif de cet exercice est d’analyser une stratégie marketing sur différents supports médiatiques (télévision, radio et journaux) et de prendre des décisions en fonction de la rentabilité et de la portée potentielle des clients
+
+```{r }
+# Définir la fonction objective et les contraintes
+obj <- c(400, 900, 500, 200)
+mat <- matrix(c(40, 75, 30, 15,   # Contrainte 1
+                -30, -40, -20, -10,   # Contrainte 2
+                40, 75, 0, 0,   # Contrainte 3
+                -1, 0, 0, 0,   # Contrainte 4
+                0, -1, 0, 0,   # Contrainte 5
+                0, 0, 1, 0,   # Contrainte 6
+                0, 0, -1, 0,  # Contrainte 7
+                0, 0, 0, 1,   # Contrainte 8
+                0, 0, 0, -1), # Contrainte 9
+              nrow = 9, byrow = TRUE)
+dir <- c("<=", ">=", "<=", ">=", "<=", "<=", "<=", ">=", "<=")
+rhs <- c(800, -2000, 500, -3, -2, 10, -5, 10, -5)
+
+```
+
+```{r warning=FALSE}
+result <- lp(direction = "max", objective.in = obj, const.mat = mat, const.dir = dir, const.rhs = rhs)
+# Afficher les quantités optimales
+if (result$status == 0) {
+  print(paste("x1 =", result$solution[1]))
+  print(paste("x2 =", result$solution[2]))
+  print(paste("x3 =", result$solution[3]))
+  print(paste("x4 =", result$solution[4]))
+} else {
+  print("Aucune solution optimale trouvée.")
+}
+print(result)
+
+
+```
+
+# Exercice 2
+### La répartition équitable des budgets entre les secteurs clés tels que l’éducation, la santé, l’armée et les infrastructures dans les pays de l’Afrique de l’Ouest est une démarche essentielle pour plusieurs raisons :
+### Optimisation des ressources financières : Elle permet d’allouer suffisamment de fonds à chaque secteur, favorisant le développement des compétences et la croissance économique à long terme.
+### Stabilité sociale et politique : Une répartition équilibrée répond aux besoins fondamentaux de la population, tels que les soins de santé et les infrastructures, renforçant ainsi la stabilité sociale et politique.
+### Prévention des déséquilibres et des inégalités : Favorise un développement durable et harmonieux dans la région.
+### L’optimisation sera faite de la manière suivante:
+
+
+```{r}
+# Données pour les pays de l'Afrique de l'Ouest
+pays <- c("Bénin", "Burkina Faso", "Cap-Vert", "Côte d'Ivoire", "Gambie", "Ghana", "Guinée", "Guinée-Bissau", "Liberia", "Mali", "Niger", "Nigeria", "Sénégal", "Sierra Leone", "Togo")
+budget <- c(1000, 1200, 1100, 1300, 900, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300) # Budgets spécifiques pour chaque pays
+# Secteurs clés et poids
+secteurs <- c("Education", "Santé", "Armée", "Infrastructures")
+poids <- c(0.3, 0.3, 0.2, 0.2) # Poids pour chaque secteur
+
+# Création du dataframe
+data <- data.frame(Pays = pays, budget , Education = 0, Santé = 0, Armée = 0, Infrastructures = 0)
+print(data)
+```
+
+### Effectuons la repartition optimale des Budgets en fonction des Secteurs stratégiques 
+
+```{r}
+
+# base de données 
+pays <- c("Bénin", "Burkina Faso", "Cap-Vert", "Côte d'Ivoire", "Gambie", "Ghana", "Guinée", "Guinée-Bissau", "Liberia", "Mali", "Niger", "Nigeria", "Sénégal", "Sierra Leone", "Togo")
+budget <- c(1000, 1200, 1100, 1300, 900, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300) # Budgets spécifiques pour chaque pays
+
+# Générer des allocations sectorielles fixes pour chaque pays
+poid_agriculture <- c(400, 450, 350, 500, 300, 450, 400, 350, 500, 450, 400, 500, 450, 400, 350)
+poid_industrie <- c(400, 450, 350, 500, 300, 450, 400, 350, 500, 450, 400, 500, 450, 400, 350)
+poid_education <- c(300, 350, 250, 400, 200, 350, 300, 250, 400, 350, 300, 400, 350, 300, 250)
+poid_sante <- c(75, 85, 65, 95, 55, 85, 75, 65, 95, 85, 75, 95, 85, 75, 65)
+poid_infrastructure <- c(35, 40, 30, 45, 25, 40, 35, 30, 45, 40, 35, 45, 40, 35, 30)
+poid_recherche <- c(50, 60, 40, 70, 30, 60, 50, 40, 70, 60, 50, 70, 60, 50, 40)
+
+data <- data.frame(pays, budget, poid_agriculture, poid_industrie, poid_education, poid_sante, poid_infrastructure, poid_recherche)
+
+
+# Début de la boucle
+for (i in 1:nrow(data)) {
+  # Extraire les valeurs nécessaires pour l'itération i
+  budget <- data$budget[i]
+  agriculture <- data$poid_agriculture[i]
+  industrie <- data$poid_industrie[i]
+  education <- data$poid_education[i]
+  sante <- data$poid_sante[i]
+  infrastructure <- data$poid_infrastructure[i]
+  
+  # Définir la fonction du solveur
+  mysolver <- function(p) {
+    a <- p[1]
+    b <- p[2]
+    c <- p[3]
+    d <- p[4]
+    e <- p[5]
+    lnf<- numeric(5)
+    lnf[1] <- ((a*agriculture/budget)/(a*agriculture/budget + b*industrie/budget + c*education/budget + d*sante/budget + e*infrastructure/budget) - 1/5)
+    lnf[2] <- ((b*industrie/budget)/(a*agriculture/budget + b*industrie/budget + c*education/budget + d*sante/budget + e*infrastructure/budget) - 1/5)
+    lnf[3] <- ((c*education/budget)/(a*agriculture/budget + b*industrie/budget + c*education/budget + d*sante/budget + e*infrastructure/budget) - 1/5)
+    lnf[4] <- ((d*sante/budget)/(a*agriculture/budget + b*industrie/budget + c*education/budget + d*sante/budget + e*infrastructure/budget) - 1/5)
+    lnf[5] <- (a + b + c + d + e - budget)
+    return(lnf)
+  }
+  
+  # Appeler le solveur
+  result <- nleqslv::nleqslv( c(1, 1, 1, 1, 1), mysolver, method = "Broyden",control = list( xtol= 1e-8,ftol=1e-15) )
+  p <- result$x
+  
+  # Assigner les résultats aux variables allocation_agriculture, allocation_industrie, allocation_education, allocation_sante
+  data$allocation_agriculture[i] <- p[1]
+  data$allocation_industrie[i] <- p[2]
+  data$allocation_education[i] <- p[3]
+  data$allocation_sante[i] <- p[4]
+  data$allocation_infrastructure[i] <- p[5]
+}
+
+#View(data)
+
+# Installer et charger les packages nécessaires
+if (!require(stats)) install.packages("stats")
+library(stats)
+
+# Générer une base de données fictive
+# (les données restent les mêmes)
+
+# Créer les variables allocation_agriculture, allocation_industrie, allocation_education, allocation_sante, allocation_infrastructure initialisées à 0
+data$allocation_agriculture <- 0
+data$allocation_industrie <- 0
+data$allocation_education <- 0
+data$allocation_sante <- 0
+data$allocation_infrastructure <- 0
+
+# Début de la boucle
+for (i in 1:nrow(data)) {
+  # Extraire les valeurs nécessaires pour l'itération i
+  budget <- data$budget[i]
+  agriculture <- data$poid_agriculture[i]
+  industrie <- data$poid_industrie[i]
+  education <- data$poid_education[i]
+  sante <- data$poid_sante[i]
+  infrastructure <- data$poid_infrastructure[i]
+  
+  # Définir la fonction du solveur
+  mysolver <- function(p) {
+    a <- p[1]
+    b <- p[2]
+    c <- p[3]
+    d <- p[4]
+    e <- p[5]
+    lnf<- numeric(5)
+    lnf[1] <- ((a*agriculture/budget)/(a*agriculture/budget + b*industrie/budget + c*education/budget + d*sante/budget + e*infrastructure/budget) - 1/5)
+    lnf[2] <- ((b*industrie/budget)/(a*agriculture/budget + b*industrie/budget + c*education/budget + d*sante/budget + e*infrastructure/budget) - 1/5)
+    lnf[3] <- ((c*education/budget)/(a*agriculture/budget + b*industrie/budget + c*education/budget + d*sante/budget + e*infrastructure/budget) - 1/5)
+    lnf[4] <- ((d*sante/budget)/(a*agriculture/budget + b*industrie/budget + c*education/budget + d*sante/budget + e*infrastructure/budget) - 1/5)
+    lnf[5] <- (a + b + c + d + e - budget)
+    return(sum(lnf^2))
+  }
+  
+  # Appeler le solveur
+  result <- optim(c(1, 1, 1, 1, 1), mysolver, method = "BFGS")
+  p <- result$par
+  
+  # Assigner les résultats aux variables allocation_agriculture, allocation_industrie, allocation_education, allocation_sante, allocation_infrastructure
+  data$allocation_agriculture[i] <- p[1]
+  data$allocation_industrie[i] <- p[2]
+  data$allocation_education[i] <- p[3]
+  data$allocation_sante[i] <- p[4]
+  data$allocation_infrastructure[i] <- p[5]
+}
+print(data)
+#View(data)
+```
+
+# Conclusion
+
+#### Les systèmes d'équations sont essentiels pour résoudre des problèmes complexes. Le logiciel R, avec des packages comme nleqslv, permet de les résoudre efficacement. R offre une modélisation intuitive et des outils robustes pour la résolution. Il permet également une analyse flexible des données. Les résultats peuvent être visualisés rapidement, facilitant l'interprétation. Comme dans, notre exemple final, nous avons optimisé l'allocation des budgets sectoriels pour plusieurs pays. R a permis de trouver des solutions équilibrées pour chaque secteur. Ainsi, R est un outil puissant pour les chercheurs et les analystes.
